@@ -42,7 +42,7 @@ func (w *words) add(word string, WS string){
 		return
 	}
 	// слово найдено в очередной раз , увеличим счетчик у элемента слайса
-	w.found[word] = WorkStatus +" ; "+WS
+	w.found[word] = WorkStatus +";"+WS
 }
 
 
@@ -62,7 +62,7 @@ func (w *words) readlist() error{
 func (w *words) remove() error{
     w.Lock() // Блокировка доступа
     for word, status := range w.found {
-        // Если найдено более 1 вхождения символа ; в значении элеменнта слайса,  
+        // Если найдено 1 и более вхождения символа ; в значении элеменнта слайса,  
         // считаем , что запрос полностью отработан (получен ответ сервера или установлен статус прерывания по таймауту)
 	// 
         if strings.Count(status, ";") > 0 {
