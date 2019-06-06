@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"strings"
 
 	"golang.org/x/net/context"
 )
@@ -44,10 +45,51 @@ func (w *words) add(word string, WS string){
 	w.found[word] = WorkStatus +" ; "+WS
 }
 
+
+//Вывести список
+func (w *words) readlist() error{
+	fmt.Println("Read all worlds:")
+	w.Lock() // Блокировка доступа
+	for word, status := range w.found {
+		fmt.Printf("%s;%s\n", word, status)
+	}
+	w.Unlock() //разблокировка доступа
+
+	return nil
+}
+
+
+func (w *words) remove() {
+    w.Lock() // Блокировка доступа
+    for word, status := range w.found {
+        // Если найдено более 1 вхождения символа ; в значении элеменнта слайса,  
+        // считаем , что запрос полностью отработан (получен ответ сервера или установлен статус прерывания по таймауту)
+	// 
+        if strings.Count(status, ";") > 1 {
+            delete(w.found,word)
+        }
+    }
+    w.Unlock() //разблокировка доступа
+    return 
+}
+
+
 // main 
 func main() {
         //Создание структуры хранения результатов
 	w := newWords()
+
+        //получим 1 раз в минуту результаты работы
+	go func() {
+		for _ = range time.Tick(time.Minute) {
+			w.readlist()
+                        fmt.Println(len(w.found))
+			w.remove()
+			fmt.Println("Worlds reset:")
+                        fmt.Println(len(w.found))
+		}
+	}()
+
         for now := range time.Tick( 1 * time.Second) {
           //Запускаем параллельные work 
           for i:=0; i<= 10; i++ {
@@ -85,10 +127,10 @@ func work(ctx context.Context, id string, dict *words) error {
 		err error
 	}, 1)
 
-	req, _ := http.NewRequest("GET", "http://localhost:1111", nil)
+	req, _ := http.NewRequest("GET", "http://localhost:1112", nil)
 	go func() {
 		resp, err := client.Do(req)
-		fmt.Printf("Doing http request, %s \n",id)
+	//	fmt.Printf("Doing http request, %s \n",id)
               
               //Добавим запись в результат статусов выполнения запросов
                dict.add(id,"StartWork")
@@ -105,7 +147,7 @@ func work(ctx context.Context, id string, dict *words) error {
 	case <-ctx.Done():
 		tr.CancelRequest(req)
 		<-c // Wait for client.Do
-		fmt.Printf("Cancel context, НЕ ДОЖДАЛИСЬ ОТВЕТА СЕРВЕРА на запрос %s\n",id)
+	//	fmt.Printf("Cancel context, НЕ ДОЖДАЛИСЬ ОТВЕТА СЕРВЕРА на запрос %s\n",id)
               //Добавим результат выполнения запроса со статусом CancelContext
                dict.add( id,"CancelContext")
 
@@ -119,7 +161,7 @@ func work(ctx context.Context, id string, dict *words) error {
 		}
 		defer resp_.Body.Close()
 		out, _ := ioutil.ReadAll(resp_.Body)
-		fmt.Printf("Server Response %s:  [%s]\n", id,out)
+	//	fmt.Printf("Server Response %s:  [%s]\n", id,out)
 
               //Добавим результат выполнения запроса Ответ сервера
                dict.add(id, string(out))

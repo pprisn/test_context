@@ -1,4 +1,4 @@
-﻿// Lazy and Very Random Server 
+﻿//Simple  Lazy and Very Random Server 
 package main
 
 import (
@@ -10,7 +10,7 @@ import (
 
 func main() {
     http.HandleFunc("/", LazyServer)
-    http.ListenAndServe(":1111", nil)
+    http.ListenAndServe(":1112", nil)
 }
 
 // sometimes really fast server, sometimes really slow server
@@ -20,7 +20,7 @@ func LazyServer(w http.ResponseWriter, req *http.Request) {
     headOrTails := rand.Intn(2)
 
     if headOrTails == 0 {
-        time.Sleep(6 * time.Second)
+        time.Sleep(7 * time.Second)
         fmt.Fprintf(w, "МЕДЛЕННЫЙ ОТВЕТ Go! slow %v \n", headOrTails)
         fmt.Printf("МЕДЛЕННЫЙ ОТВЕТ Go! slow %v \n",     headOrTails)
         return

@@ -1,4 +1,6 @@
-﻿// http://dahernan.github.io/2015/02/04/context-and-cancellation-of-goroutines/
+﻿//В моей работе я использовал материалы 
+// http://dahernan.github.io/2015/02/04/context-and-cancellation-of-goroutines/
+//
 //Для отмены программы мы можем использовать контекстный пакет. 
 //Мы должны изменить функцию work, чтобы она принимала аргумент типа 
 //context.Context, обычно это первый аргумент.

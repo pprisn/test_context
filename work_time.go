@@ -1,4 +1,5 @@
-﻿package main
+﻿//Как прервать процесс
+package main
 
 import (
     "fmt"
