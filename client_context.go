@@ -59,18 +59,18 @@ func (w *words) readlist() error{
 }
 
 
-func (w *words) remove() {
+func (w *words) remove() error{
     w.Lock() // Блокировка доступа
     for word, status := range w.found {
         // Если найдено более 1 вхождения символа ; в значении элеменнта слайса,  
         // считаем , что запрос полностью отработан (получен ответ сервера или установлен статус прерывания по таймауту)
 	// 
-        if strings.Count(status, ";") > 1 {
+        if strings.Count(status, ";") > 0 {
             delete(w.found,word)
         }
     }
     w.Unlock() //разблокировка доступа
-    return 
+    return nil
 }
 
 
@@ -149,8 +149,7 @@ func work(ctx context.Context, id string, dict *words) error {
 		<-c // Wait for client.Do
 	//	fmt.Printf("Cancel context, НЕ ДОЖДАЛИСЬ ОТВЕТА СЕРВЕРА на запрос %s\n",id)
               //Добавим результат выполнения запроса со статусом CancelContext
-               dict.add( id,"CancelContext")
-
+                dict.add( id,"CancelContext")
 		return ctx.Err()
 	case ok := <-c:
 		err := ok.err
