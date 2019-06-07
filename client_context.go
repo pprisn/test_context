@@ -43,6 +43,7 @@ func (w *words) add(word string, WS string){
 	}
 	// слово найдено в очередной раз , увеличим счетчик у элемента слайса
 	w.found[word] = WorkStatus +";"+WS
+	return
 }
 
 
@@ -50,17 +51,18 @@ func (w *words) add(word string, WS string){
 func (w *words) readlist() error{
 	fmt.Println("Read all worlds:")
 	w.Lock() // Блокировка доступа
+	defer w.Unlock() //разблокировка доступа
+
 	for word, status := range w.found {
 		fmt.Printf("%s;%s\n", word, status)
 	}
-	w.Unlock() //разблокировка доступа
-
 	return nil
 }
 
 
 func (w *words) remove() error{
     w.Lock() // Блокировка доступа
+    defer w.Unlock() //разблокировка доступа
     for word, status := range w.found {
         // Если найдено 1 и более вхождения символа ; в значении элеменнта слайса,  
         // считаем , что запрос полностью отработан (получен ответ сервера или установлен статус прерывания по таймауту)
@@ -69,7 +71,6 @@ func (w *words) remove() error{
             delete(w.found,word)
         }
     }
-    w.Unlock() //разблокировка доступа
     return nil
 }
 
@@ -81,7 +82,7 @@ func main() {
 
         //получим 1 раз в минуту результаты работы
 	go func() {
-		for _ = range time.Tick(time.Minute) {
+		for range time.Tick(time.Minute) {
 			w.readlist()
                         fmt.Println(len(w.found))
 			w.remove()
@@ -89,6 +90,7 @@ func main() {
                         fmt.Println(len(w.found))
 		}
 	}()
+
 
         for now := range time.Tick( 1 * time.Second) {
           //Запускаем параллельные work 
@@ -102,6 +104,7 @@ func main() {
 			go work(ctx, id, w )
 			wg.Wait()
 		}(i, fmt.Sprintf("%v",now))
+
 	  }
 	}
 	fmt.Println("Finished.")
@@ -126,6 +129,7 @@ func work(ctx context.Context, id string, dict *words) error {
 		r   *http.Response
 		err error
 	}, 1)
+	defer close(c)
 
 	req, _ := http.NewRequest("GET", "http://localhost:1112", nil)
 	go func() {
@@ -161,12 +165,17 @@ func work(ctx context.Context, id string, dict *words) error {
          		return err
 		}
 		defer resp_.Body.Close()
-		out, _ := ioutil.ReadAll(resp_.Body)
+		out, error := ioutil.ReadAll(resp_.Body)
+		if error != nil {
+			//fmt.Println("Error ", err)
+                        dict.add(id, "NoReadBody")
+         		return error
+		}
+
 	//	fmt.Printf("Server Response %s:  [%s]\n", id,out)
 
               //Добавим результат выполнения запроса Ответ сервера
                dict.add(id, string(out))
-
 	}
     
 	return nil
