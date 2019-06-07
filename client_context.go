@@ -92,7 +92,7 @@ func main() {
 
         for now := range time.Tick( 1 * time.Second) {
           //Запускаем параллельные work 
-          for i:=0; i<= 10; i++ {
+          for i:=0; i<= 100; i++ {
 		wg.Add(1)
 		go func(i int, now string) {
 			// Создание контекста с ограничением времени его жизни в 4 сек

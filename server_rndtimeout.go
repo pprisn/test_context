@@ -21,12 +21,12 @@ func LazyServer(w http.ResponseWriter, req *http.Request) {
 
     if headOrTails == 0 {
         time.Sleep(7 * time.Second)
-        fmt.Fprintf(w, "МЕДЛЕННЫЙ ОТВЕТ Go! slow %v \n", headOrTails)
+        fmt.Fprintf(w, "МЕДЛЕННЫЙ ОТВЕТ Go! slow %v", headOrTails)
         fmt.Printf("МЕДЛЕННЫЙ ОТВЕТ Go! slow %v \n",     headOrTails)
         return
     }
 
-    fmt.Fprintf(w, "БЫСТРЫЙ ОТВЕТ Go! quick %v \n", headOrTails)
+    fmt.Fprintf(w, "БЫСТРЫЙ ОТВЕТ Go! quick %v ", headOrTails)
     fmt.Printf("БЫСТРЫЙ ОТВЕТ Go! quick %v \n",     headOrTails)
     return
 }
