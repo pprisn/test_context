@@ -133,7 +133,7 @@ func work(ctx context.Context, id string, dict *words) error {
 	//	fmt.Printf("Doing http request, %s \n",id)
               
               //Добавим запись в результат статусов выполнения запросов
-               dict.add(id,"StartWork")
+                dict.add(id,"StartWork")
 
 		pack := struct {
 			r   *http.Response
@@ -150,13 +150,15 @@ func work(ctx context.Context, id string, dict *words) error {
 	//	fmt.Printf("Cancel context, НЕ ДОЖДАЛИСЬ ОТВЕТА СЕРВЕРА на запрос %s\n",id)
               //Добавим результат выполнения запроса со статусом CancelContext
                 dict.add( id,"CancelContext")
+		//fmt.Println(now.Sub(time.Now())) //замер времени протухания контекста
 		return ctx.Err()
 	case ok := <-c:
 		err := ok.err
 		resp_ := ok.r
 		if err != nil {
-			fmt.Println("Error ", err)
-			return err
+			//fmt.Println("Error ", err)
+                        dict.add(id, "NoConnection")
+         		return err
 		}
 		defer resp_.Body.Close()
 		out, _ := ioutil.ReadAll(resp_.Body)
