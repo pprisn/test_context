@@ -2,6 +2,7 @@
 //Параллельное выполнение группы запросов и сохранение результатов
 //http-запросы к серверу в обычном порядке, если сервер работает медленно, мы игнорируем (отменяем) запрос
 //и выполняем быстрый возврат, чтобы мы могли управлять отменой и освободить соединение.
+//По материалам блога https://blog.golang.org/context
 //
 package main
 
@@ -60,7 +61,7 @@ func (w *words) add(word string, WS string) {
 	return
 }
 
-//Вывести список
+//Метод readlist читает и выводит на экран список всех значений 
 func (w *words) readlist() error {
 	fmt.Println("Read all worlds:")
 	//	w.RLock()         // Блокировка доступа
@@ -70,7 +71,8 @@ func (w *words) readlist() error {
 	}
 	return nil
 }
-
+//Метод remove() удаляет записи кэша карт var w *words 
+//которые имеют завершенный статосом обработки запросов на период проверки 
 func (w *words) remove() error {
 	w.Lock()         // Блокировка доступа
 	defer w.Unlock() //разблокировка доступа
@@ -141,7 +143,7 @@ func main() {
 	snow := "" //переменная для формирования ID запроса
 	for now := range time.Tick(5 * time.Second) {
 		//Запускаем параллельные work
-		for i := 0; i <= 1000; i++ {
+		for i := 0; i <= 500; i++ {
 			wg.Add(1)
 			snow = fmt.Sprintf("ID:%d-%v", i, now)
 			go func(i int, now string) {
@@ -181,7 +183,7 @@ func work(ctx context.Context, id string, dict *words) error {
 	}, 1)
 	defer close(c)
 
-	req, _ := http.NewRequest("GET", "http://localhost:1112", nil)
+	req, _ := http.NewRequest("GET", "http://localhost:1112/random", nil)
 	go func() {
 		resp, err := client.Do(req)
 		//	fmt.Printf("Doing http request, %s \n",id)
